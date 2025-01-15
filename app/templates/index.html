@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for camera in cameras %}
+    <div class="bg-white p-4 rounded-lg shadow">
+        <h2 class="text-xl font-bold mb-2">{{ camera.name }}</h2>
+        <p class="text-gray-600 mb-2">Stream URL: {{ camera.stream_url }}</p>
+        {% if camera.username %}
+        <p class="text-gray-600 mb-2">Username: {{ camera.username }}</p>
+        {% endif %}
+        <div class="flex justify-between mt-4">
+            <a href="{{ url_for('view_camera', camera_id=camera.id) }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">View Stream</a>
+            <form action="{{ url_for('delete_camera', camera_id=camera.id) }}" method="POST" class="inline">
+                <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700" onclick="return confirm('Are you sure you want to delete this camera?')">Delete</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-span-3 text-center py-8">
+        <p class="text-gray-600">No cameras found. Click "Add Camera" to get started.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

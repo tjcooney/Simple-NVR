@@ -1,0 +1,13 @@
+services:
+  nvr:
+    build: .
+    ports:
+      - 1935:1935
+      - 8080:80
+      - 5001:5001
+    volumes:
+      - ./data:/data
+    environment:
+      - TZ=America/New_York
+      - FLASK_PORT=5001
+    restart: unless-stopped

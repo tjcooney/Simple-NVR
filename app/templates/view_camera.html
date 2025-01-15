@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white p-6 rounded-lg shadow">
+        <h1 class="text-2xl font-bold mb-4">{{ camera.name }}</h1>
+        <div class="aspect-w-16 aspect-h-9 bg-black mb-4">
+            <video id="video" class="w-full h-auto" controls></video>
+        </div>
+        <div class="bg-gray-100 p-4 rounded">
+            <h2 class="font-bold mb-2">Camera Details:</h2>
+            <p><strong>Stream URL:</strong> {{ camera.stream_url }}</p>
+            {% if camera.username %}
+            <p><strong>Username:</strong> {{ camera.username }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var video = document.getElementById('video');
+        var hls = new Hls({
+            debug: true,
+            manifestLoadingTimeOut: 20000,
+            manifestLoadingMaxRetry: 3,
+            manifestLoadingRetryDelay: 500,
+        });
+        
+        var hlsUrl = 'http://{{ request.host.split(":")[0] }}:8080/hls/{{ camera.name }}.m3u8';
+        console.log('Attempting to load HLS stream:', hlsUrl);
+
+        if (Hls.isSupported()) {
+            hls.loadSource(hlsUrl);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                console.log('HLS manifest parsed, attempting playback');
+                video.play().catch(function(error) {
+                    console.log('Playback failed:', error);
+                });
+            });
+
+            // Add error handling
+            hls.on(Hls.Events.ERROR, function(event, data) {
+                console.log('HLS error:', data);
+                if (data.fatal) {
+                    switch(data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            console.log('Network error, trying to recover...');
+                            hls.startLoad();
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            console.log('Media error, trying to recover...');
+                            hls.recoverMediaError();
+                            break;
+                        default:
+                            console.error('Fatal error, stream cannot be recovered');
+                            break;
+                    }
+                }
+            });
+        }
+        // For Safari (which has built-in HLS support)
+        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = hlsUrl;
+            video.addEventListener('loadedmetadata', function() {
+                video.play();
+            });
+        }
+    });
+</script>
+{% endblock %}
