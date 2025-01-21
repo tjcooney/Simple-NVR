@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto py-8">
+    <h1 class="text-2xl font-bold mb-4">Edit Camera: {{ camera.name }}</h1>
+
+    <div class="bg-white p-6 rounded-lg shadow">
+        <form action="{{ url_for('edit_camera', camera_id=camera.id) }}" method="POST">
+            <div class="mb-4">
+                <label for="name" class="block text-gray-700 font-bold">Camera Name:</label>
+                <input type="text" id="name" name="name" value="{{ camera.name }}" class="w-full border-gray-300 rounded-lg">
+            </div>
+            <div class="mb-4">
+                <label for="stream_url" class="block text-gray-700 font-bold">Stream URL:</label>
+                <input type="text" id="stream_url" name="stream_url" value="{{ camera.stream_url }}" class="w-full border-gray-300 rounded-lg">
+            </div>
+            <div class="mb-4">
+                <label for="username" class="block text-gray-700 font-bold">Username (optional):</label>
+                <input type="text" id="username" name="username" value="{{ camera.username }}" class="w-full border-gray-300 rounded-lg">
+            </div>
+            <div class="mb-4">
+                <label for="password" class="block text-gray-700 font-bold">Password (optional):</label>
+                <input type="password" id="password" name="password" value="{{ camera.password }}" class="w-full border-gray-300 rounded-lg">
+            </div>
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">Save Changes</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

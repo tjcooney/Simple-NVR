@@ -1,5 +1,33 @@
 #!/bin/bash
 
+# Set up directory permissions
+echo "Setting up NGINX directories and permissions..."
+mkdir -p /var/log/nginx
+mkdir -p /var/lib/nginx/body
+mkdir -p /var/lib/nginx/fastcgi
+mkdir -p /var/lib/nginx/proxy
+mkdir -p /var/lib/nginx/scgi
+mkdir -p /var/lib/nginx/uwsgi
+mkdir -p /mnt/data
+
+touch /var/log/cron.log
+chmod 666 /var/log/cron.log
+
+# Create and set permissions for record log
+touch /var/log/nginx/record.log
+chmod 777 /var/log/nginx/record.log
+
+# Set permissions
+chown -R nobody:nogroup /var/log/nginx
+chown -R nobody:nogroup /var/lib/nginx
+chmod -R 755 /var/lib/nginx
+chmod -R 755 /var/log/nginx
+chmod -R 777 /mnt/data
+
+# Start cron service
+service cron start
+echo "Started cron service"
+
 # Check if NGINX RTMP module exists
 echo "Checking for NGINX RTMP module..."
 ls -l /usr/lib/nginx/modules/ngx_rtmp_module.so
@@ -18,6 +46,14 @@ if [ $? -ne 0 ]; then
     cat /var/log/nginx/error.log
     exit 1
 fi
+
+# Start cron service for file mover
+echo "Setting up cron job for file mover..."
+echo "*/1 * * * * cd /app/app && python3 file_mover.py >> /var/log/cron.log 2>&1" > /etc/cron.d/move_files
+chmod 0644 /etc/cron.d/move_files
+crontab /etc/cron.d/move_files
+service cron start
+echo "Cron service started."
 
 # Start the Python NVR application in the background
 echo "Starting NVR application..."

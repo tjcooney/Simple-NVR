@@ -25,7 +25,7 @@ class StreamManager:
             logger.info(f"RTSP URL for {camera.name}: {rtsp_url}")
             
             # Construct the full GStreamer command
-            command = f'gst-launch-1.0 -v rtspsrc location="{rtsp_url}" protocols=tcp ! rtph264depay ! h264parse ! flvmux ! rtmpsink location="rtmp://127.0.0.1/live/{camera.name}"'
+            command = f'gst-launch-1.0 -v rtspsrc location="{rtsp_url}" do-rtsp-keep-alive=true protocols=tcp retry=1 latency=100 timeout=5000000 ! rtph264depay ! h264parse ! flvmux ! rtmpsink sync=false location="rtmp://127.0.0.1/live/{camera.name}"'
             
             # Log the generated command
             logger.info(f"Generated GStreamer command for {camera.name}: {command}")

@@ -43,6 +43,34 @@ def add_camera():
 
     return render_template('add_camera.html')
 
+@app.route('/edit_camera/<int:camera_id>', methods=['GET', 'POST'])
+def edit_camera(camera_id):
+    session = init_db()
+    camera = session.query(Camera).filter_by(id=camera_id).first()
+
+    if not camera:
+        flash('Camera not found.', 'error')
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        # Update camera details with form data
+        camera.name = request.form['name']
+        camera.stream_url = request.form['stream_url']
+        camera.username = request.form.get('username', None)
+        camera.password = request.form.get('password', None)
+
+        try:
+            session.commit()
+            flash('Camera details updated successfully!', 'success')
+        except Exception as e:
+            session.rollback()
+            flash(f'Error updating camera details: {str(e)}', 'error')
+
+        return redirect(url_for('view_camera', camera_id=camera.id))
+
+    return render_template('edit_camera.html', camera=camera)
+
+
 @app.route('/delete_camera/<int:camera_id>', methods=['POST'])
 def delete_camera(camera_id):
     try:
