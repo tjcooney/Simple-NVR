@@ -1,2 +1,2 @@
 # Simple-NVR
-I didn't like the NVR's that were available publically so i made my home with gstreamer.
+I didn't like the NVR's that were available publically so I made my home with gstreamer and nginx backbone. It should work with RTSP streams from any camera manufacturer. Still working on stability and security, but it works.
