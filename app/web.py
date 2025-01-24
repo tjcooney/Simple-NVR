@@ -1,21 +1,28 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import requests
+from dotenv import load_dotenv
 import os
 import logging
 from .database import init_db, Camera
 
+# Load environment variables
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'
+app.secret_key = os.getenv('SECRET_KEY', 'your-default-secret-key')
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+app.config['WEBSITE_TITLE'] = os.getenv('WEBSITE_TITLE', 'Default Title')
+
 @app.route('/')
 def index():
     session = init_db()
     cameras = session.query(Camera).all()
-    return render_template('index.html', cameras=cameras)
+    return render_template('index.html', title=app.config['WEBSITE_TITLE'], cameras=cameras)
+
 
 @app.route('/add_camera', methods=['GET', 'POST'])
 def add_camera():
@@ -162,4 +169,4 @@ def stream_status():
     return jsonify(status)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('FLASK_PORT', 5001)), debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('FLASK_PORT', 5001)), debug=False)

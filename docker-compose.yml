@@ -8,6 +8,8 @@ services:
     volumes:
       - ./data:/data
       - ${RECORDINGS_PATH:-/mnt/data}:/mnt/data
+    env_file:
+      - .env
     environment:
       - TZ=America/New_York
       - FLASK_PORT=5001
