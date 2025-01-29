@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 import requests
 from dotenv import load_dotenv
 import os
@@ -16,13 +16,37 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app.config['WEBSITE_TITLE'] = os.getenv('WEBSITE_TITLE', 'Default Title')
+app.config['PASSWORD'] = os.getenv('WEBSITE_PASSWORD', 'defaultpassword')  # Set your password in .env
+
+@app.before_request
+def require_login():
+    allowed_routes = ['login', 'static']
+    if request.endpoint not in allowed_routes and 'logged_in' not in session:
+        return redirect(url_for('login'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        password = request.form.get('password')
+        if password == app.config['PASSWORD']:
+            session['logged_in'] = True
+            flash('You are now logged in.', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid password.', 'error')
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    flash('You are now logged out.', 'success')
+    return redirect(url_for('login'))
 
 @app.route('/')
 def index():
     session = init_db()
     cameras = session.query(Camera).all()
     return render_template('index.html', title=app.config['WEBSITE_TITLE'], cameras=cameras)
-
 
 @app.route('/add_camera', methods=['GET', 'POST'])
 def add_camera():
@@ -77,7 +101,6 @@ def edit_camera(camera_id):
 
     return render_template('edit_camera.html', camera=camera)
 
-
 @app.route('/delete_camera/<int:camera_id>', methods=['POST'])
 def delete_camera(camera_id):
     try:
@@ -101,7 +124,12 @@ def view_camera(camera_id):
     if not camera:
         flash('Camera not found.', 'error')
         return redirect(url_for('index'))
-    return render_template('view_camera.html', camera=camera)
+    return render_template(
+        'view_camera.html', 
+        camera=camera, 
+        site_title=app.config['WEBSITE_TITLE'], 
+        page_title=f"Viewing {camera.name}"
+    )
 
 @app.route('/debug')
 def debug():

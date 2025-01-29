@@ -1,22 +1,20 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h1 class="text-2xl font-bold mb-4">{{ camera.name }}</h1>
-        <div class="aspect-w-16 aspect-h-9 bg-black mb-4">
-            <video id="video" class="w-full h-auto" controls autoplay muted playsinline></video>
+<div class="container mt-4" style="max-width: 1000px;">
+    <div class="card shadow-sm p-4">
+        <h1 class="h4 text-center mb-4">{{ camera.name }}</h1>
+        <div class="ratio ratio-16x9 bg-dark mb-3">
+            <video id="video" class="w-100" controls autoplay muted playsinline></video>
         </div>
-        <div class="bg-gray-100 p-4 rounded">
-            <h2 class="font-bold mb-2">Camera Details:</h2>
+        <button id="downloadScreenshot" class="btn btn-primary w-100 mb-3">Download Screenshot</button>
+        <div class="card bg-light p-3">
+            <h5 class="fw-bold">Camera Details:</h5>
             <p><strong>Stream URL:</strong> {{ camera.stream_url }}</p>
             {% if camera.username %}
             <p><strong>Username:</strong> {{ camera.username }}</p>
             {% endif %}
-            
-            <p><br /><a href="{{ url_for('edit_camera', camera_id=camera.id) }}" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700">
-                Edit Camera Details
-            </a></p>
+            <a href="{{ url_for('edit_camera', camera_id=camera.id) }}" class="btn btn-success w-100 mt-3">Edit Camera Details</a>
         </div>
     </div>
 </div>
@@ -25,82 +23,21 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var video = document.getElementById('video');
-        
-        // Ensure video is muted initially to allow autoplay
-        video.muted = true;
-        
-        var hls = new Hls({
-            debug: true,
-            manifestLoadingTimeOut: 20000,
-            manifestLoadingMaxRetry: 3,
-            manifestLoadingRetryDelay: 500,
-        });
-        
-        var hlsUrl = 'http://{{ request.host.split(":")[0] }}:8080/hls/{{ camera.name }}.m3u8';
-        console.log('Attempting to load HLS stream:', hlsUrl);
-
-        function startPlayback() {
-            const playPromise = video.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(function(error) {
-                    console.log('Autoplay failed:', error);
-                    // If autoplay fails, we can show a message or retry with muted playback
-                    if (!video.muted) {
-                        console.log('Retrying playback with muted audio...');
-                        video.muted = true;
-                        video.play().catch(function(error) {
-                            console.log('Muted playback also failed:', error);
-                        });
-                    }
-                });
-            }
-        }
+        var hlsUrl = 'http://{{ request.host.split(":" )[0] }}:8080/hls/{{ camera.name }}.m3u8';
 
         if (Hls.isSupported()) {
+            var hls = new Hls();
             hls.loadSource(hlsUrl);
             hls.attachMedia(video);
-            
             hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                console.log('HLS manifest parsed, attempting playback');
-                startPlayback();
+                video.play().catch(error => console.log('Playback failed:', error));
             });
-
-            // Add error handling
-            hls.on(Hls.Events.ERROR, function(event, data) {
-                console.log('HLS error:', data);
-                if (data.fatal) {
-                    switch(data.type) {
-                        case Hls.ErrorTypes.NETWORK_ERROR:
-                            console.log('Network error, trying to recover...');
-                            hls.startLoad();
-                            break;
-                        case Hls.ErrorTypes.MEDIA_ERROR:
-                            console.log('Media error, trying to recover...');
-                            hls.recoverMediaError();
-                            break;
-                        default:
-                            console.error('Fatal error, stream cannot be recovered');
-                            break;
-                    }
-                }
-            });
-        }
-        // For Safari (which has built-in HLS support)
-        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = hlsUrl;
             video.addEventListener('loadedmetadata', function() {
-                startPlayback();
+                video.play();
             });
         }
-
-        // Add event listener for play/pause button
-        video.addEventListener('click', function() {
-            if (video.paused) {
-                startPlayback();
-            } else {
-                video.pause();
-            }
-        });
     });
 </script>
 {% endblock %}
