@@ -1,33 +1,31 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow">
-    <h1 class="text-2xl font-bold mb-6">Add New Camera</h1>
-    <form action="{{ url_for('add_camera') }}" method="POST">
-        <div class="mb-4">
-            <label for="name" class="block text-gray-700 font-bold mb-2">Camera Name</label>
-            <input type="text" id="name" name="name" required
-                   class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
-        </div>
-        <div class="mb-4">
-            <label for="stream_url" class="block text-gray-700 font-bold mb-2">Stream URL</label>
-            <input type="text" id="stream_url" name="stream_url" required
-                   class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
-        </div>
-        <div class="mb-4">
-            <label for="username" class="block text-gray-700 font-bold mb-2">Username (optional)</label>
-            <input type="text" id="username" name="username"
-                   class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
-        </div>
-        <div class="mb-6">
-            <label for="password" class="block text-gray-700 font-bold mb-2">Password (optional)</label>
-            <input type="password" id="password" name="password"
-                   class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
-        </div>
-        <div class="flex justify-between">
-            <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Add Camera</button>
-            <a href="{{ url_for('index') }}" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-700">Cancel</a>
-        </div>
-    </form>
+<div class="container mt-4" style="max-width: 600px;">
+    <div class="card shadow-sm p-4">
+        <h1 class="h4 text-center mb-4">Add New Camera</h1>
+        <form action="{{ url_for('add_camera') }}" method="POST">
+            <div class="mb-3">
+                <label for="name" class="form-label">Camera Name</label>
+                <input type="text" id="name" name="name" required class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="stream_url" class="form-label">Stream URL</label>
+                <input type="text" id="stream_url" name="stream_url" required class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="username" class="form-label">Username (optional)</label>
+                <input type="text" id="username" name="username" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password (optional)</label>
+                <input type="password" id="password" name="password" class="form-control">
+            </div>
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">Add Camera</button>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
