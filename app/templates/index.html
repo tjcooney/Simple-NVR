@@ -11,10 +11,6 @@
                     <div class="ratio ratio-16x9 bg-dark">
                         <video id="video_{{ loop.index }}" class="w-100" muted autoplay playsinline></video>
                     </div>
-                    <p class="card-text text-muted mt-2">Stream URL: {{ camera.stream_url }}</p>
-                    {% if camera.username %}
-                    <p class="card-text text-muted">Username: {{ camera.username }}</p>
-                    {% endif %}
                     <div class="d-flex justify-content-between mt-3">
                         <a href="{{ url_for('view_camera', camera_id=camera.id) }}" class="btn btn-primary">View Stream</a>
                         <form action="{{ url_for('delete_camera', camera_id=camera.id) }}" method="POST" class="d-inline">
@@ -37,10 +33,20 @@
     document.addEventListener('DOMContentLoaded', function() {
         {% for camera in cameras %}
         var video = document.getElementById('video_{{ loop.index }}');
-        var hls = new Hls();
-        var hlsUrl = 'http://{{ request.host.split(":")[0] }}:8080/hls/{{ camera.name }}.m3u8';
+        var protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+        var hlsUrl;
+        
+        // Check if we're accessing via IP:5001 or domain name
+        if (window.location.port === '5001') {
+            // If accessing via IP:5001, use port 8080 for HLS
+            hlsUrl = protocol + '//' + window.location.hostname + ':8080/hls/{{ camera.name }}.m3u8';
+        } else {
+            // For domain access (coochie.tjcooney.com), use the same hostname
+            hlsUrl = protocol + '//' + window.location.hostname + '/hls/{{ camera.name }}.m3u8';
+        }
 
         if (Hls.isSupported()) {
+            var hls = new Hls();
             hls.loadSource(hlsUrl);
             hls.attachMedia(video);
             hls.on(Hls.Events.MANIFEST_PARSED, function() {

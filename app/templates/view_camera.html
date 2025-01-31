@@ -22,22 +22,32 @@
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var video = document.getElementById('video');
-        var hlsUrl = 'http://{{ request.host.split(":" )[0] }}:8080/hls/{{ camera.name }}.m3u8';
+    var video = document.getElementById('video');
+    var protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+    var hlsUrl;
+    
+    // Check if we're accessing via IP:5001 or domain name
+    if (window.location.port === '5001') {
+        // If accessing via IP:5001, use port 8080 for HLS
+        hlsUrl = protocol + '//' + window.location.hostname + ':8080/hls/{{ camera.name }}.m3u8';
+    } else {
+        // For domain access (coochie.tjcooney.com), use the same hostname
+        hlsUrl = protocol + '//' + window.location.hostname + '/hls/{{ camera.name }}.m3u8';
+    }
 
-        if (Hls.isSupported()) {
-            var hls = new Hls();
-            hls.loadSource(hlsUrl);
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                video.play().catch(error => console.log('Playback failed:', error));
-            });
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = hlsUrl;
-            video.addEventListener('loadedmetadata', function() {
-                video.play();
-            });
-        }
-    });
+    if (Hls.isSupported()) {
+        var hls = new Hls();
+        hls.loadSource(hlsUrl);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            video.play().catch(error => console.log('Playback failed:', error));
+        });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = hlsUrl;
+        video.addEventListener('loadedmetadata', function() {
+            video.play();
+        });
+    }
+});
 </script>
 {% endblock %}

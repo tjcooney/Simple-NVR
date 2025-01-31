@@ -3,52 +3,63 @@ import requests
 from dotenv import load_dotenv
 import os
 import logging
+from datetime import timedelta
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user 
 from .database import init_db, Camera
+from werkzeug.security import generate_password_hash, check_password_hash
 
-# Load environment variables
-load_dotenv()
+# User class for Flask-Login
+class User(UserMixin):
+    def __init__(self, id):
+        self.id = id
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your-default-secret-key')
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 app.config['WEBSITE_TITLE'] = os.getenv('WEBSITE_TITLE', 'Default Title')
-app.config['PASSWORD'] = os.getenv('WEBSITE_PASSWORD', 'defaultpassword')  # Set your password in .env
+app.config['PASSWORD_HASH'] = generate_password_hash(os.getenv('WEBSITE_PASSWORD', 'defaultpassword'))
 
-@app.before_request
-def require_login():
-    allowed_routes = ['login', 'static']
-    if request.endpoint not in allowed_routes and 'logged_in' not in session:
-        return redirect(url_for('login'))
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User(user_id)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         password = request.form.get('password')
-        if password == app.config['PASSWORD']:
-            session['logged_in'] = True
+        remember = request.form.get('remember', False)
+        
+        if check_password_hash(app.config['PASSWORD_HASH'], password):
+            user = User(1)
+            login_user(user, remember=remember, duration=timedelta(days=30))
             flash('You are now logged in.', 'success')
-            return redirect(url_for('index'))
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('index'))
         else:
             flash('Invalid password.', 'error')
     return render_template('login.html')
 
 @app.route('/logout')
+@login_required
 def logout():
-    session.pop('logged_in', None)
-    flash('You are now logged out.', 'success')
+    logout_user()
+    flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
 
 @app.route('/')
+@login_required
 def index():
     session = init_db()
     cameras = session.query(Camera).all()
-    return render_template('index.html', title=app.config['WEBSITE_TITLE'], cameras=cameras)
+    return render_template('index.html', 
+                         title=app.config['WEBSITE_TITLE'], 
+                         cameras=cameras)
 
 @app.route('/add_camera', methods=['GET', 'POST'])
+@login_required
 def add_camera():
     if request.method == 'POST':
         name = request.form['name']
@@ -75,6 +86,7 @@ def add_camera():
     return render_template('add_camera.html')
 
 @app.route('/edit_camera/<int:camera_id>', methods=['GET', 'POST'])
+@login_required
 def edit_camera(camera_id):
     session = init_db()
     camera = session.query(Camera).filter_by(id=camera_id).first()
@@ -118,6 +130,7 @@ def delete_camera(camera_id):
     return redirect(url_for('index'))
 
 @app.route('/view_camera/<int:camera_id>')
+@login_required
 def view_camera(camera_id):
     session = init_db()
     camera = session.query(Camera).filter_by(id=camera_id).first()

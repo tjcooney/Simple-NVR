@@ -39,6 +39,13 @@
         .alert {
             margin-top: 1rem;
         }
+        .form-check {
+            margin-bottom: 1rem;
+        }
+        .form-check-label {
+            color: #6c757d;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -49,9 +56,12 @@
                 <label for="password" class="form-label">Password</label>
                 <input type="password" class="form-control" id="password" name="password" required>
             </div>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                <label class="form-check-label" for="remember">Remember me</label>
+            </div>
             <button type="submit" class="btn btn-primary">Login</button>
         </form>
-
         <!-- Flash messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -63,7 +73,6 @@
             {% endif %}
         {% endwith %}
     </div>
-
     <!-- Bootstrap JS (optional, for interactive components) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
