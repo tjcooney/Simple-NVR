@@ -47,11 +47,16 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Start cron service for file mover
-echo "Setting up cron job for file mover..."
+# Start cron service for file mover and cleanup
+echo "Setting up cron jobs for file mover and cleanup..."
+# Run file mover every minute for organizing
 echo "*/1 * * * * cd /app/app && python3 file_mover.py >> /var/log/cron.log 2>&1" > /etc/cron.d/move_files
+# Also run a dedicated cleanup job at 1am
+echo "0 1 * * * cd /app/app && python3 -c 'from file_mover import cleanup_old_recordings; cleanup_old_recordings()' >> /var/log/cron.log 2>&1" > /etc/cron.d/cleanup_files
 chmod 0644 /etc/cron.d/move_files
+chmod 0644 /etc/cron.d/cleanup_files
 crontab /etc/cron.d/move_files
+crontab -l | cat - /etc/cron.d/cleanup_files | crontab -
 service cron start
 echo "Cron service started."
 

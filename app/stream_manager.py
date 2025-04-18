@@ -3,7 +3,7 @@ import asyncio
 import logging
 from subprocess import Popen, PIPE
 
-logging.basicConfig(level=logging.INFO)
+# Note: We don't call basicConfig here as it's already set in main.py
 logger = logging.getLogger(__name__)
 
 class StreamManager:
@@ -74,7 +74,11 @@ class StreamManager:
             while True:
                 line = process.stdout.readline()
                 if line:
-                    logger.info(f"{camera_name} OUT: {line.strip()}")
+                    # Only log important messages, filter out stats and routine pipeline info
+                    if "ERROR" in line or "WARNING" in line or "Could not" in line:
+                        logger.warning(f"{camera_name}: {line.strip()}")
+                    # Uncomment the line below if you want to see all GStreamer output for debugging
+                    # logger.debug(f"{camera_name} OUT: {line.strip()}")
 
                 # Exit the loop if the process has ended
                 if process.poll() is not None:

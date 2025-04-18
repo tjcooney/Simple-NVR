@@ -7,10 +7,31 @@ services:
       - 5001:5001
     volumes:
       - ./data:/data
-      - ${RECORDINGS_PATH:-/mnt/data}:/mnt/data
+      - ./recordings:/mnt/data
     env_file:
       - .env
     environment:
       - TZ=America/New_York
       - FLASK_PORT=5001
+      - RETENTION_DAYS=${RETENTION_DAYS:-7}
+      - RECORDINGS_PATH=/mnt/data
+    restart: unless-stopped
+    container_name: nvr_app
+
+  restart-service:
+    image: alpine:latest
+    depends_on:
+      - nvr
+    command: |
+      sh -c '
+      apk add --no-cache docker-cli &&
+      sleep 5 &&
+      echo "Setting up cron job..." &&
+      echo "0 4 * * * docker restart nvr_app" | tee /etc/crontabs/root &&
+      echo "Cron job set up. Starting crond..." &&
+      crond -f -d 8'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=America/New_York
     restart: unless-stopped

@@ -65,9 +65,7 @@ async def main():
             for camera in cameras:
                 if camera.name in stream_manager.processes:
                     process = stream_manager.processes[camera.name]
-                    if process.poll() is None:
-                        logger.info(f"Stream {camera.name} is running")
-                    else:
+                    if process.poll() is not None:
                         logger.error(f"Stream {camera.name} has stopped with code {process.returncode}")
                         # Attempt to restart the stream
                         logger.info(f"Attempting to restart stream {camera.name}")

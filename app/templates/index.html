@@ -11,11 +11,8 @@
                     <div class="ratio ratio-16x9 bg-dark">
                         <video id="video_{{ loop.index }}" class="w-100" muted autoplay playsinline></video>
                     </div>
-                    <div class="d-flex justify-content-between mt-3">
-                        <a href="{{ url_for('view_camera', camera_id=camera.id) }}" class="btn btn-primary">View Stream</a>
-                        <form action="{{ url_for('delete_camera', camera_id=camera.id) }}" method="POST" class="d-inline">
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this camera?')">Delete</button>
-                        </form>
+                    <div class="d-flex justify-content-center mt-3">
+                        <a href="{{ url_for('view_camera', camera_id=camera.id) }}" class="btn btn-primary w-100">View Stream</a>
                     </div>
                 </div>
             </div>
