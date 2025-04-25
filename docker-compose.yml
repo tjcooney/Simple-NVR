@@ -7,7 +7,7 @@ services:
       - 5001:5001
     volumes:
       - ./data:/data
-      - ./recordings:/mnt/data
+      - /mnt/data:/mnt/data
     env_file:
       - .env
     environment:
