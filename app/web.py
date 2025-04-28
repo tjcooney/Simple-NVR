@@ -9,6 +9,8 @@ from datetime import datetime, date, timedelta
 import subprocess
 import base64
 from pathlib import Path
+import threading
+import time
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user 
 from .database import init_db, Camera
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -53,6 +55,26 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
+
+@app.route('/restart', methods=['POST'])
+@login_required
+def restart_app():
+    try:
+        flash('NVR application restarting...', 'success')
+        # Schedule a restart after returning the response
+        def restart_after_response():
+            time.sleep(1)
+            os._exit(0)  # This will cause the container to restart (if restart: always is set)
+            
+        # Schedule the restart to happen in a separate thread
+        thread = threading.Thread(target=restart_after_response)
+        thread.daemon = True
+        thread.start()
+        
+    except Exception as e:
+        flash(f'Error restarting application: {str(e)}', 'error')
+    
+    return redirect(url_for('index'))
 
 @app.context_processor
 def inject_cameras():

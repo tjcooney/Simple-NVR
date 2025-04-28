@@ -15,7 +15,7 @@ services:
       - FLASK_PORT=5001
       - RETENTION_DAYS=${RETENTION_DAYS:-7}
       - RECORDINGS_PATH=/mnt/data
-    restart: unless-stopped
+    restart: always
     container_name: nvr_app
 
   restart-service:
@@ -24,14 +24,22 @@ services:
       - nvr
     command: |
       sh -c '
-      apk add --no-cache docker-cli &&
+      apk add --no-cache inotify-tools &&
       sleep 5 &&
-      echo "Setting up cron job..." &&
-      echo "0 4 * * * docker restart nvr_app" | tee /etc/crontabs/root &&
-      echo "Cron job set up. Starting crond..." &&
-      crond -f -d 8'
+      echo "Setting up restart file watcher..." &&
+      echo "0 4 * * * kill -1 1" | tee /etc/crontabs/root &&
+      echo "Cron job set up. Starting file watcher..." &&
+      while true; do
+        if [ -f /tmp/restart_nvr ]; then
+          echo "Restart signal detected!"
+          rm -f /tmp/restart_nvr
+          kill -1 1
+          sleep 5
+        fi
+        sleep 2
+      done'
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp:/tmp
     environment:
       - TZ=America/New_York
-    restart: unless-stopped
+    restart: always
